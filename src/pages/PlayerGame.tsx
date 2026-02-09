@@ -1,0 +1,165 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useGame } from '../contexts/GameContext';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { GameMap } from '../components/GameMap';
+import { calculateCurrentRadius, formatTime, getTimeUntilNextShrink } from '../utils/gameHelpers';
+import './PlayerGame.css';
+
+export const PlayerGame: React.FC = () => {
+    const { gameId } = useParams<{ gameId: string }>();
+    const navigate = useNavigate();
+    const {
+        currentGame,
+        players,
+        updatePlayerLocation,
+        markPlayerFoundChicken,
+        leaveGame,
+    } = useGame();
+    const { location, error: locationError } = useGeolocation(true);
+    const [currentRadius, setCurrentRadius] = useState(0);
+    const [elapsedTime, setElapsedTime] = useState(0);
+    const [timeToShrink, setTimeToShrink] = useState(0);
+    const [hasMarkedFound, setHasMarkedFound] = useState(false);
+
+    // Update player location
+    useEffect(() => {
+        if (location && currentGame) {
+            updatePlayerLocation(location);
+        }
+    }, [location, currentGame?.id]);
+
+    // Update radius and timers every second
+    useEffect(() => {
+        if (!currentGame) return;
+
+        const interval = setInterval(() => {
+            const radius = calculateCurrentRadius(currentGame);
+            setCurrentRadius(radius);
+
+            if (currentGame.startTime && currentGame.status === 'active') {
+                setElapsedTime(Date.now() - currentGame.startTime);
+                setTimeToShrink(getTimeUntilNextShrink(currentGame));
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [currentGame]);
+
+    const handleFoundChicken = async () => {
+        if (hasMarkedFound) return;
+
+        try {
+            await markPlayerFoundChicken();
+            setHasMarkedFound(true);
+        } catch (err) {
+            alert('Failed to mark as found');
+        }
+    };
+
+    const handleLeaveGame = async () => {
+        await leaveGame();
+        navigate('/role');
+    };
+
+    if (!currentGame || !gameId) {
+        return <div className="loading">Loading game...</div>;
+    }
+
+    if (locationError) {
+        return (
+            <div className="error-container">
+                <h2>Location Required</h2>
+                <p>{locationError}</p>
+                <button onClick={handleLeaveGame} className="btn btn-secondary">
+                    Back
+                </button>
+            </div>
+        );
+    }
+
+    if (!location) {
+        return <div className="loading">Getting your location...</div>;
+    }
+
+    const playerCount = players.size;
+    const playersFoundChicken = Array.from(players.values()).filter(p => p.foundChicken).length;
+
+    return (
+        <div className="player-game-container">
+            <div className="game-header">
+                <div className="game-info">
+                    <h1>👤 Player View</h1>
+                    <div className="game-code">
+                        Chicken: <span className="chicken-name">{currentGame.chickenName}</span>
+                    </div>
+                </div>
+
+                <button onClick={handleLeaveGame} className="btn btn-small">
+                    Leave Game
+                </button>
+            </div>
+
+            <div className="game-stats">
+                <div className="stat">
+                    <span className="stat-label">Search Radius:</span>
+                    <span className="stat-value">{Math.round(currentRadius)}m</span>
+                </div>
+                {currentGame.status === 'active' && (
+                    <>
+                        <div className="stat">
+                            <span className="stat-label">Time Elapsed:</span>
+                            <span className="stat-value">{formatTime(elapsedTime)}</span>
+                        </div>
+                        <div className="stat">
+                            <span className="stat-label">Next Shrink:</span>
+                            <span className="stat-value">{formatTime(timeToShrink)}</span>
+                        </div>
+                    </>
+                )}
+                <div className="stat">
+                    <span className="stat-label">Found:</span>
+                    <span className="stat-value">{playersFoundChicken}/{playerCount}</span>
+                </div>
+            </div>
+
+            {currentGame.status === 'waiting' && (
+                <div className="waiting-area">
+                    <p className="waiting-message">
+                        Waiting for chicken to start the game...
+                    </p>
+                </div>
+            )}
+
+            {currentGame.status === 'active' && (
+                <div className="action-area">
+                    <button
+                        onClick={handleFoundChicken}
+                        className={`btn btn-primary btn-large ${hasMarkedFound ? 'btn-success' : ''}`}
+                        disabled={hasMarkedFound}
+                    >
+                        {hasMarkedFound ? '✓ You Found the Chicken!' : 'I Found the Chicken!'}
+                    </button>
+                </div>
+            )}
+
+            <div className="map-container">
+                <GameMap
+                    centerLocation={location}
+                    chickenLocation={currentGame.chickenLocation}
+                    circleRadius={currentRadius}
+                    showChicken={false}
+                    showPlayers={false}
+                    showCircle={true}
+                />
+            </div>
+
+            <div className="game-hint">
+                <p>
+                    🎯 The chicken is somewhere within the red circle.
+                    The circle shrinks every {currentGame.config.shrinkInterval / 60000} minutes!
+                </p>
+            </div>
+        </div>
+    );
+};
