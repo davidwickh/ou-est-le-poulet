@@ -4,6 +4,7 @@ import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
 import { calculateCurrentRadius, formatTime, getTimeUntilNextShrink, getCircleCenter } from '../utils/gameHelpers';
+import { Venue, fetchVenuesInRadius } from '../utils/venueSearch';
 import './PlayerGame.css';
 
 export const PlayerGame: React.FC = () => {
@@ -21,6 +22,7 @@ export const PlayerGame: React.FC = () => {
     const [elapsedTime, setElapsedTime] = useState(0);
     const [timeToShrink, setTimeToShrink] = useState(0);
     const [hasMarkedFound, setHasMarkedFound] = useState(false);
+    const [venues, setVenues] = useState<Venue[]>([]);
 
     // Update player location
     useEffect(() => {
@@ -45,6 +47,16 @@ export const PlayerGame: React.FC = () => {
 
         return () => clearInterval(interval);
     }, [currentGame]);
+
+    // Fetch venues when we have circle center
+    useEffect(() => {
+        if (!currentGame?.chickenLocation || !currentGame?.circleOffset) return;
+
+        const circleCenter = getCircleCenter(currentGame.chickenLocation, currentGame.circleOffset);
+        const radius = currentGame.config.initialRadiusMeters;
+
+        fetchVenuesInRadius(circleCenter, radius).then(setVenues);
+    }, [currentGame?.chickenLocation?.lat, currentGame?.chickenLocation?.lng, currentGame?.circleOffset, currentGame?.config.initialRadiusMeters]);
 
     const handleFoundChicken = async () => {
         if (hasMarkedFound) return;
@@ -151,10 +163,12 @@ export const PlayerGame: React.FC = () => {
                             ? getCircleCenter(currentGame.chickenLocation, currentGame.circleOffset)
                             : null
                     }
+                    venues={venues}
                     circleRadius={currentRadius}
                     showChicken={false}
                     showPlayers={false}
                     showCircle={true}
+                    showVenues={true}
                 />
             </div>
 

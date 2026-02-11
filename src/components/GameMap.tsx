@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Location, Player } from '../types';
+import { Venue } from '../utils/venueSearch';
 
 // Fix for default marker icons in React-Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -40,6 +41,22 @@ const myLocationIcon = L.divIcon({
     iconAnchor: [8, 8],
 });
 
+// Pub icon
+const pubIcon = L.divIcon({
+    className: 'custom-pub-icon',
+    html: '<div style="font-size: 20px;">🍺</div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 20],
+});
+
+// Bar icon
+const barIcon = L.divIcon({
+    className: 'custom-bar-icon',
+    html: '<div style="font-size: 20px;">🍸</div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 20],
+});
+
 interface MapUpdaterProps {
     center: Location;
 }
@@ -70,11 +87,13 @@ interface GameMapProps {
     chickenLocation?: Location | null;
     circleCenter?: Location | null; // Separate center for the search circle (offset from chicken)
     playerLocations?: Map<string, Player>;
+    venues?: Venue[]; // Pubs and bars to display
     circleRadius?: number;
     showChicken?: boolean;
     showPlayers?: boolean;
     showCircle?: boolean;
     showMyLocation?: boolean;
+    showVenues?: boolean;
 }
 
 export const GameMap: React.FC<GameMapProps> = ({
@@ -82,11 +101,13 @@ export const GameMap: React.FC<GameMapProps> = ({
     chickenLocation,
     circleCenter,
     playerLocations,
+    venues = [],
     circleRadius,
     showChicken = false,
     showPlayers = false,
     showCircle = false,
     showMyLocation = true,
+    showVenues = false,
 }) => {
     return (
         <MapContainer
@@ -154,6 +175,19 @@ export const GameMap: React.FC<GameMapProps> = ({
                     <Popup>📍 You are here</Popup>
                 </Marker>
             )}
+
+            {/* Show venue markers (pubs and bars) */}
+            {showVenues && venues.map((venue) => (
+                <Marker
+                    key={venue.id}
+                    position={[venue.location.lat, venue.location.lng]}
+                    icon={venue.type === 'pub' ? pubIcon : barIcon}
+                >
+                    <Popup>
+                        {venue.type === 'pub' ? '🍺' : '🍸'} {venue.name}
+                    </Popup>
+                </Marker>
+            ))}
         </MapContainer>
     );
 };

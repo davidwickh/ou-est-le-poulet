@@ -4,6 +4,7 @@ import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
 import { calculateCurrentRadius, formatTime, getCircleCenter } from '../utils/gameHelpers';
+import { Venue, fetchVenuesInRadius } from '../utils/venueSearch';
 import './ChickenGame.css';
 
 export const ChickenGame: React.FC = () => {
@@ -13,6 +14,7 @@ export const ChickenGame: React.FC = () => {
     const { location, error: locationError } = useGeolocation(true);
     const [currentRadius, setCurrentRadius] = useState(0);
     const [elapsedTime, setElapsedTime] = useState(0);
+    const [venues, setVenues] = useState<Venue[]>([]);
 
     // Update chicken location
     useEffect(() => {
@@ -36,6 +38,16 @@ export const ChickenGame: React.FC = () => {
 
         return () => clearInterval(interval);
     }, [currentGame]);
+
+    // Fetch venues when we have location and circle offset
+    useEffect(() => {
+        if (!location || !currentGame?.circleOffset) return;
+
+        const circleCenter = getCircleCenter(location, currentGame.circleOffset);
+        const radius = currentGame.config.initialRadiusMeters;
+
+        fetchVenuesInRadius(circleCenter, radius).then(setVenues);
+    }, [location?.lat, location?.lng, currentGame?.circleOffset, currentGame?.config.initialRadiusMeters]);
 
     const handleStartGame = async () => {
         try {
@@ -136,10 +148,12 @@ export const ChickenGame: React.FC = () => {
                             : location
                     }
                     playerLocations={players}
+                    venues={venues}
                     circleRadius={currentRadius}
                     showChicken={true}
                     showPlayers={true}
                     showCircle={true}
+                    showVenues={true}
                 />
             </div>
 
