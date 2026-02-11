@@ -219,7 +219,7 @@ export const ChickenGame: React.FC = () => {
                             >
                                 <div className="players-header">
                                     <span>Players ({playerCount})</span>
-                                    <span className="expand-icon">{showPlayersPanel ? '▼' : '▶'}</span>
+                                    <span className={`expand-icon ${showPlayersPanel ? 'expanded' : ''}`}>▼</span>
                                 </div>
                             </div>
                             {showPlayersPanel && (

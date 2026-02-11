@@ -84,9 +84,10 @@
 /* Floating cards */
 .floating-cards {
   position: absolute;
+  top: 70px;
   bottom: 24px;
   left: 16px;
-  right: 16px;
+  width: auto;
   z-index: 1000;
   pointer-events: none;
 }
@@ -97,9 +98,10 @@
 
 .cards-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 12px;
-  align-items: flex-end;
+  align-items: flex-start;
+  height: 100%;
 }
 
 .info-card {
@@ -271,14 +273,19 @@
 .expand-icon {
   font-size: 0.75rem;
   color: #999;
+  transition: transform 0.2s ease;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
 }
 
 .players-dropdown {
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
   right: 0;
-  margin-bottom: 8px;
+  margin-top: 8px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -286,15 +293,15 @@
   padding: 8px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
   list-style: none;
-  max-height: 200px;
+  max-height: min(240px, calc(100vh - 400px));
   overflow-y: auto;
-  animation: slideDown 0.2s ease;
+  animation: slideUp 0.2s ease;
 }
 
-@keyframes slideDown {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
@@ -533,17 +540,17 @@
 /* Responsive adjustments */
 @media (min-width: 768px) {
   .floating-cards {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    bottom: 32px;
     left: 24px;
-    right: 24px;
+    top: 80px;
+    bottom: 32px;
+  }
+
+  .cards-row {
     gap: 16px;
   }
 
   .pot-card {
-    min-width: 280px;
+    min-width: 220px;
   }
 
   .purchase-panel {
@@ -621,4 +628,92 @@
 .error-container p {
   color: #666;
   margin-bottom: 24px;
+}
+
+/* Player-specific styles */
+.waiting-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1500;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waiting-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 320px;
+}
+
+.waiting-card h2 {
+  margin: 0 0 12px 0;
+  font-size: 1.5rem;
+  color: #1a1a2e;
+}
+
+.waiting-card p {
+  margin: 0 0 16px 0;
+  color: #666;
+}
+
+.player-count-big {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3b82f6;
+  margin-bottom: 16px;
+}
+
+.waiting-hint {
+  font-size: 0.9rem;
+  color: #999;
+  font-style: italic;
+}
+
+.found-button-container {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.btn-found {
+  padding: 16px 32px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-found:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(255, 107, 53, 0.5);
+}
+
+.btn-found:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-found:disabled {
+  opacity: 0.9;
+  cursor: default;
+}
+
+.btn-found-success {
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  box-shadow: 0 8px 24px rgba(46, 204, 113, 0.4);
 }

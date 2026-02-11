@@ -5,7 +5,7 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
 import { calculateCurrentRadius, formatTime, getTimeUntilNextShrink, getCircleCenter } from '../utils/gameHelpers';
 import { Venue, fetchVenuesInRadius } from '../utils/venueSearch';
-import './PlayerGame.css';
+import './ChickenGame.css';
 
 export const PlayerGame: React.FC = () => {
     const { gameId } = useParams<{ gameId: string }>();
@@ -25,19 +25,16 @@ export const PlayerGame: React.FC = () => {
     const [venues, setVenues] = useState<Venue[]>([]);
     const gameRef = useRef(currentGame);
 
-    // Keep ref updated with latest game data
     useEffect(() => {
         gameRef.current = currentGame;
     }, [currentGame]);
 
-    // Update player location
     useEffect(() => {
         if (location && currentGame) {
             updatePlayerLocation(location);
         }
     }, [location, currentGame?.id]);
 
-    // Update radius and timers every second - uses ref to avoid resetting interval
     useEffect(() => {
         if (!currentGame?.id) return;
 
@@ -57,7 +54,6 @@ export const PlayerGame: React.FC = () => {
         return () => clearInterval(interval);
     }, [currentGame?.id]);
 
-    // Fetch venues when we have circle center
     useEffect(() => {
         if (!currentGame?.chickenLocation || !currentGame?.circleOffset) return;
 
@@ -107,70 +103,11 @@ export const PlayerGame: React.FC = () => {
     const playersFoundChicken = Array.from(players.values()).filter(p => p.foundChicken).length;
     const totalSpent = currentGame.purchases.reduce((sum, p) => sum + p.amount, 0);
     const remainingPot = currentGame.potAmount - totalSpent;
+    const potPercentage = currentGame.potAmount > 0 ? (remainingPot / currentGame.potAmount) * 100 : 0;
 
     return (
-        <div className="player-game-container">
-            <div className="game-header">
-                <div className="game-info">
-                    <h1>👤 Player View</h1>
-                    <div className="game-code">
-                        Chicken: <span className="chicken-name">{currentGame.chickenName}</span>
-                    </div>
-                </div>
-
-                <button onClick={handleLeaveGame} className="btn btn-small">
-                    Leave Game
-                </button>
-            </div>
-
-            <div className="game-stats">
-                <div className="stat">
-                    <span className="stat-label">Search Radius:</span>
-                    <span className="stat-value">{Math.round(currentRadius)}m</span>
-                </div>
-                {currentGame.status === 'active' && (
-                    <>
-                        <div className="stat">
-                            <span className="stat-label">Time Elapsed:</span>
-                            <span className="stat-value">{formatTime(elapsedTime)}</span>
-                        </div>
-                        <div className="stat">
-                            <span className="stat-label">Next Shrink:</span>
-                            <span className="stat-value">{formatTime(timeToShrink)}</span>
-                        </div>
-                    </>
-                )}
-                <div className="stat">
-                    <span className="stat-label">Found:</span>
-                    <span className="stat-value">{playersFoundChicken}/{playerCount}</span>
-                </div>
-                <div className="stat pot-stat">
-                    <span className="stat-label">💰 Pot Remaining:</span>
-                    <span className="stat-value">£{remainingPot.toFixed(2)}</span>
-                </div>
-            </div>
-
-            {currentGame.status === 'waiting' && (
-                <div className="waiting-area">
-                    <p className="waiting-message">
-                        Waiting for chicken to start the game...
-                    </p>
-                </div>
-            )}
-
-            {currentGame.status === 'active' && (
-                <div className="action-area">
-                    <button
-                        onClick={handleFoundChicken}
-                        className={`btn btn-primary btn-large ${hasMarkedFound ? 'btn-success' : ''}`}
-                        disabled={hasMarkedFound}
-                    >
-                        {hasMarkedFound ? '✓ You Found the Chicken!' : 'I Found the Chicken!'}
-                    </button>
-                </div>
-            )}
-
-            <div className="map-container">
+        <div className="game-fullscreen">
+            <div className="map-fullscreen">
                 <GameMap
                     centerLocation={location}
                     circleCenter={
@@ -187,12 +124,101 @@ export const PlayerGame: React.FC = () => {
                 />
             </div>
 
-            <div className="game-hint">
-                <p>
-                    🎯 The chicken is somewhere within the red circle.
-                    The circle shrinks every {currentGame.config.shrinkIntervalMilliSeconds / 60000} minutes!
-                </p>
+            <div className="top-bar">
+                <div className="top-bar-left">
+                    <span className="game-title">👤 Player</span>
+                    <span className="game-code-badge">{currentGame.chickenName}</span>
+                </div>
+                <button onClick={handleLeaveGame} className="btn-icon" title="Leave Game">
+                    ✕
+                </button>
             </div>
+
+            <div className="floating-cards">
+                <div className="cards-row">
+                    <div className="info-card status-card">
+                        <div className="card-row">
+                            <div className="stat-mini">
+                                <span className="stat-icon">👥</span>
+                                <div className="stat-content">
+                                    <span className="stat-num">{playerCount}</span>
+                                    <span className="stat-text">Players</span>
+                                </div>
+                            </div>
+                            <div className="stat-mini">
+                                <span className="stat-icon">✓</span>
+                                <div className="stat-content">
+                                    <span className="stat-num">{playersFoundChicken}</span>
+                                    <span className="stat-text">Found</span>
+                                </div>
+                            </div>
+                            <div className="stat-mini">
+                                <span className="stat-icon">📍</span>
+                                <div className="stat-content">
+                                    <span className="stat-num">{Math.round(currentRadius)}m</span>
+                                    <span className="stat-text">Radius</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {currentGame.status === 'active' && (
+                        <div className="info-card timer-card">
+                            <div className="timer-display">
+                                <div className="timer-main">
+                                    <span className="timer-label">Elapsed</span>
+                                    <span className="timer-value">{formatTime(elapsedTime)}</span>
+                                </div>
+                                <div className="timer-divider"></div>
+                                <div className="timer-shrink">
+                                    <span className="timer-label">Next Shrink</span>
+                                    <span className="timer-value shrink">{formatTime(timeToShrink)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="info-card pot-card">
+                        <div className="pot-header">
+                            <span className="pot-icon">💰</span>
+                            <span className="pot-amount">£{remainingPot.toFixed(2)}</span>
+                            <span className="pot-total">/ £{currentGame.potAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="pot-slider-container">
+                            <div
+                                className="pot-slider-fill"
+                                style={{
+                                    width: `${potPercentage}%`,
+                                    backgroundColor: potPercentage > 50 ? '#2ecc71' : potPercentage > 25 ? '#f39c12' : '#e74c3c'
+                                }}
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {currentGame.status === 'waiting' && (
+                <div className="waiting-overlay">
+                    <div className="waiting-card">
+                        <h2>Waiting for Chicken</h2>
+                        <p>Following: <strong>{currentGame.chickenName}</strong></p>
+                        <div className="player-count-big">{playerCount} players</div>
+                        <p className="waiting-hint">The chicken will start the game soon...</p>
+                    </div>
+                </div>
+            )}
+
+            {currentGame.status === 'active' && (
+                <div className="found-button-container">
+                    <button
+                        onClick={handleFoundChicken}
+                        className={`btn btn-found ${hasMarkedFound ? 'btn-found-success' : ''}`}
+                        disabled={hasMarkedFound}
+                    >
+                        {hasMarkedFound ? '✓ You Found the Chicken!' : '🐔 I Found the Chicken!'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
