@@ -20,6 +20,7 @@ import {
     EncryptedLocation,
     GameDB,
     PlayerDB,
+    Purchase,
 } from '../types';
 import { generateGameCode, mergeGameConfig, generateCircleOffset } from '../utils/gameHelpers';
 import { encryptLocation, decryptLocation } from '../utils/encryption';
@@ -29,12 +30,13 @@ export interface GameContextType {
     players: Map<string, Player>;
     loading: boolean;
     error: string | null;
-    createGame: (config: Partial<GameConfig>) => Promise<string>;
+    createGame: (config: Partial<GameConfig>, potAmount: number) => Promise<string>;
     joinGame: (gameCode: string) => Promise<string>;
     startGame: () => Promise<void>;
     updateChickenLocation: (location: Location) => Promise<void>;
     updatePlayerLocation: (location: Location) => Promise<void>;
     markPlayerFoundChicken: () => Promise<void>;
+    addPurchase: (amount: number, description: string) => Promise<void>;
     leaveGame: () => Promise<void>;
 }
 
@@ -115,6 +117,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     startTime: data.startTime,
                     currentRadius: data.currentRadius,
                     createdAt: data.createdAt,
+                    potAmount: data.potAmount,
+                    purchases: data.purchases || [],
                 });
             }
         });
@@ -149,7 +153,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
     }, [currentGame?.id]);
 
-    const createGame = async (config: Partial<GameConfig>): Promise<string> => {
+    const createGame = async (config: Partial<GameConfig>, potAmount: number): Promise<string> => {
         if (!currentUser) throw new Error('Must be logged in to create a game');
 
         setLoading(true);
@@ -171,6 +175,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 startTime: null,
                 currentRadius: gameConfig.initialRadiusMeters,
                 createdAt: Date.now(),
+                potAmount,
+                purchases: [],
             };
 
             await setDoc(gameRef, newGameDB);
@@ -190,6 +196,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 startTime: null,
                 currentRadius: gameConfig.initialRadiusMeters,
                 createdAt: Date.now(),
+                potAmount,
+                purchases: [],
             });
             setLoading(false);
             return gameRef.id;
@@ -258,6 +266,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 startTime: gameData.startTime,
                 currentRadius: gameData.currentRadius,
                 createdAt: gameData.createdAt,
+                potAmount: gameData.potAmount,
+                purchases: gameData.purchases || [],
             });
 
             setLoading(false);
@@ -342,6 +352,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPlayers(new Map());
     };
 
+    const addPurchase = async (amount: number, description: string) => {
+        if (!currentGame || !currentUser || currentGame.chickenId !== currentUser.uid) {
+            throw new Error('Only the chicken can add purchases');
+        }
+
+        const newPurchase: Purchase = {
+            id: `purchase-${Date.now()}`,
+            amount,
+            description,
+            timestamp: Date.now(),
+        };
+
+        const gameRef = doc(db, 'games', currentGame.id);
+        const updatedPurchases = [...currentGame.purchases, newPurchase];
+        
+        await updateDoc(gameRef, {
+            purchases: updatedPurchases,
+        });
+    };
+
     const value: GameContextType = {
         currentGame,
         players,
@@ -353,6 +383,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateChickenLocation,
         updatePlayerLocation,
         markPlayerFoundChicken,
+        addPurchase,
         leaveGame,
     };
 

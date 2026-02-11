@@ -96,6 +96,8 @@ export const PlayerGame: React.FC = () => {
 
     const playerCount = players.size;
     const playersFoundChicken = Array.from(players.values()).filter(p => p.foundChicken).length;
+    const totalSpent = currentGame.purchases.reduce((sum, p) => sum + p.amount, 0);
+    const remainingPot = currentGame.potAmount - totalSpent;
 
     return (
         <div className="player-game-container">
@@ -132,6 +134,10 @@ export const PlayerGame: React.FC = () => {
                 <div className="stat">
                     <span className="stat-label">Found:</span>
                     <span className="stat-value">{playersFoundChicken}/{playerCount}</span>
+                </div>
+                <div className="stat pot-stat">
+                    <span className="stat-label">💰 Pot Remaining:</span>
+                    <span className="stat-value">£{remainingPot.toFixed(2)}</span>
                 </div>
             </div>
 

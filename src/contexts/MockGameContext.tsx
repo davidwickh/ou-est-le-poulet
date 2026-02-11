@@ -64,7 +64,7 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return () => clearInterval(interval);
     }, [currentGame?.status, currentGame?.startTime]);
 
-    const createGame = async (config: Partial<GameConfig>): Promise<string> => {
+    const createGame = async (config: Partial<GameConfig>, potAmount: number = 0): Promise<string> => {
         setLoading(true);
 
         // Simulate network delay
@@ -86,6 +86,8 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             startTime: null,
             currentRadius: gameConfig.initialRadiusMeters,
             createdAt: Date.now(),
+            potAmount,
+            purchases: [],
         };
 
         setCurrentGame(newGame);
@@ -119,6 +121,8 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             startTime: null,
             currentRadius: gameConfig.initialRadiusMeters,
             createdAt: Date.now(),
+            potAmount: 50, // Default mock pot amount
+            purchases: [],
         };
 
         setCurrentGame(mockGame);
@@ -169,6 +173,24 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log('[MockGame] Left game');
     };
 
+    const addPurchase = async (amount: number, description: string) => {
+        if (!currentGame) throw new Error('No game active');
+
+        const newPurchase = {
+            id: `purchase-${Date.now()}`,
+            amount,
+            description,
+            timestamp: Date.now(),
+        };
+
+        setCurrentGame({
+            ...currentGame,
+            purchases: [...currentGame.purchases, newPurchase],
+        });
+
+        console.log('[MockGame] Added purchase:', amount, description);
+    };
+
     const value: GameContextType = {
         currentGame,
         players,
@@ -180,6 +202,7 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateChickenLocation,
         updatePlayerLocation,
         markPlayerFoundChicken,
+        addPurchase,
         leaveGame,
     };
 

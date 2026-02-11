@@ -25,6 +25,13 @@ export interface GameConfig {
   shrinkMeters: number;
 }
 
+export interface Purchase {
+  id: string;
+  amount: number;
+  description: string;
+  timestamp: number;
+}
+
 export interface Player {
   userId: string;
   displayName: string;
@@ -56,6 +63,8 @@ export interface Game {
   startTime: number | null;
   currentRadius: number;
   createdAt: number;
+  potAmount: number; // Initial pot amount in currency
+  purchases: Purchase[]; // List of drink purchases
 }
 
 // Database version of Game with encrypted chicken location
@@ -70,6 +79,8 @@ export interface GameDB {
   startTime: number | null;
   currentRadius: number;
   createdAt: number;
+  potAmount: number; // Initial pot amount in currency
+  purchases: Purchase[]; // List of drink purchases
 }
 
 export interface GameWithPlayers extends Game {

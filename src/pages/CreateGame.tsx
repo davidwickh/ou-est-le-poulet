@@ -13,6 +13,7 @@ export const CreateGame: React.FC = () => {
         shrinkIntervalMilliSeconds: DEFAULT_GAME_CONFIG.shrinkIntervalMilliSeconds / 60000, // Convert to minutes for UI
         shrinkMeters: DEFAULT_GAME_CONFIG.shrinkMeters,
     });
+    const [potAmount, setPotAmount] = useState(50); // Default £50 pot
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,7 +25,7 @@ export const CreateGame: React.FC = () => {
                 shrinkIntervalMilliSeconds: (config.shrinkIntervalMilliSeconds || 5) * 60000,
             };
 
-            const gameId = await createGame(gameConfig);
+            const gameId = await createGame(gameConfig, potAmount);
             navigate(`/game/chicken/${gameId}`);
         } catch (err) {
             console.error('Failed to create game:', err);
@@ -91,6 +92,23 @@ export const CreateGame: React.FC = () => {
                             onChange={(e) =>
                                 setConfig({ ...config, shrinkMeters: Number(e.target.value) })
                             }
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="potAmount">
+                            Starting Pot (£)
+                            <span className="label-hint">Money pool for drinks</span>
+                        </label>
+                        <input
+                            id="potAmount"
+                            type="number"
+                            min="0"
+                            max="1000"
+                            step="5"
+                            value={potAmount}
+                            onChange={(e) => setPotAmount(Number(e.target.value))}
                             required
                         />
                     </div>

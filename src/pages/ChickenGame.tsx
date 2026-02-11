@@ -3,18 +3,21 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
-import { calculateCurrentRadius, formatTime, getCircleCenter } from '../utils/gameHelpers';
+import { calculateCurrentRadius, formatTime, getCircleCenter, getTimeUntilNextShrink } from '../utils/gameHelpers';
 import { Venue, fetchVenuesInRadius } from '../utils/venueSearch';
 import './ChickenGame.css';
 
 export const ChickenGame: React.FC = () => {
     const { gameId } = useParams<{ gameId: string }>();
     const navigate = useNavigate();
-    const { currentGame, players, startGame, updateChickenLocation, leaveGame } = useAppGame();
+    const { currentGame, players, startGame, updateChickenLocation, leaveGame, addPurchase } = useAppGame();
     const { location, error: locationError } = useGeolocation(true);
     const [currentRadius, setCurrentRadius] = useState(0);
     const [elapsedTime, setElapsedTime] = useState(0);
+    const [timeToShrink, setTimeToShrink] = useState(0);
     const [venues, setVenues] = useState<Venue[]>([]);
+    const [purchaseAmount, setPurchaseAmount] = useState('');
+    const [purchaseDescription, setPurchaseDescription] = useState('');
 
     // Update chicken location
     useEffect(() => {
@@ -33,6 +36,7 @@ export const ChickenGame: React.FC = () => {
 
             if (currentGame.startTime) {
                 setElapsedTime(Date.now() - currentGame.startTime);
+                setTimeToShrink(getTimeUntilNextShrink(currentGame));
             }
         }, 1000);
 
@@ -62,6 +66,20 @@ export const ChickenGame: React.FC = () => {
         navigate('/role');
     };
 
+    const handleAddPurchase = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const amount = parseFloat(purchaseAmount);
+        if (isNaN(amount) || amount <= 0) return;
+
+        try {
+            await addPurchase(amount, purchaseDescription || 'Drink');
+            setPurchaseAmount('');
+            setPurchaseDescription('');
+        } catch (err) {
+            alert('Failed to add purchase');
+        }
+    };
+
     if (!currentGame || !gameId) {
         return <div className="loading">Loading game...</div>;
     }
@@ -84,6 +102,8 @@ export const ChickenGame: React.FC = () => {
 
     const playerCount = players.size;
     const playersFoundChicken = Array.from(players.values()).filter(p => p.foundChicken).length;
+    const totalSpent = currentGame.purchases.reduce((sum, p) => sum + p.amount, 0);
+    const remainingPot = currentGame.potAmount - totalSpent;
 
     return (
         <div className="chicken-game-container">
@@ -114,11 +134,21 @@ export const ChickenGame: React.FC = () => {
                     <span className="stat-value">{Math.round(currentRadius)}m</span>
                 </div>
                 {currentGame.status === 'active' && (
-                    <div className="stat">
-                        <span className="stat-label">Time Elapsed:</span>
-                        <span className="stat-value">{formatTime(elapsedTime)}</span>
-                    </div>
+                    <>
+                        <div className="stat">
+                            <span className="stat-label">Time Elapsed:</span>
+                            <span className="stat-value">{formatTime(elapsedTime)}</span>
+                        </div>
+                        <div className="stat">
+                            <span className="stat-label">Next Shrink:</span>
+                            <span className="stat-value">{formatTime(timeToShrink)}</span>
+                        </div>
+                    </>
                 )}
+                <div className="stat pot-stat">
+                    <span className="stat-label">💰 Pot Remaining:</span>
+                    <span className="stat-value">£{remainingPot.toFixed(2)}</span>
+                </div>
             </div>
 
             {currentGame.status === 'waiting' && (
@@ -156,6 +186,44 @@ export const ChickenGame: React.FC = () => {
                     showVenues={true}
                 />
             </div>
+
+            {currentGame.status === 'active' && (
+                <div className="purchase-section">
+                    <h3>🍺 Log a Drink Purchase</h3>
+                    <form onSubmit={handleAddPurchase} className="purchase-form">
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Amount (£)"
+                            value={purchaseAmount}
+                            onChange={(e) => setPurchaseAmount(e.target.value)}
+                            required
+                        />
+                        <input
+                            type="text"
+                            placeholder="Description (optional)"
+                            value={purchaseDescription}
+                            onChange={(e) => setPurchaseDescription(e.target.value)}
+                        />
+                        <button type="submit" className="btn btn-primary">
+                            Add Purchase
+                        </button>
+                    </form>
+                    {currentGame.purchases.length > 0 && (
+                        <div className="purchases-list">
+                            <h4>Recent Purchases:</h4>
+                            <ul>
+                                {currentGame.purchases.slice(-5).reverse().map((purchase) => (
+                                    <li key={purchase.id}>
+                                        £{purchase.amount.toFixed(2)} - {purchase.description}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {playerCount > 0 && (
                 <div className="players-list">
