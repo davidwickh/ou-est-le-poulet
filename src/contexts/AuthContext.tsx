@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
     User,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
+    signInAnonymously,
     signOut as firebaseSignOut,
     onAuthStateChanged,
     updateProfile,
@@ -12,8 +11,7 @@ import { auth } from '../firebase/config';
 interface AuthContextType {
     currentUser: User | null;
     loading: boolean;
-    signUp: (email: string, password: string, displayName: string) => Promise<void>;
-    signIn: (email: string, password: string) => Promise<void>;
+    signInWithName: (displayName: string) => Promise<void>;
     signOut: () => Promise<void>;
 }
 
@@ -37,15 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const signUp = async (email: string, password: string, displayName: string) => {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const signInWithName = async (displayName: string) => {
+        const userCredential = await signInAnonymously(auth);
         if (userCredential.user) {
             await updateProfile(userCredential.user, { displayName });
         }
-    };
-
-    const signIn = async (email: string, password: string) => {
-        await signInWithEmailAndPassword(auth, email, password);
     };
 
     const signOut = async () => {
@@ -64,8 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const value: AuthContextType = {
         currentUser,
         loading,
-        signUp,
-        signIn,
+        signInWithName,
         signOut,
     };
 

@@ -78,7 +78,14 @@
 .map-container {
   flex: 1;
   min-height: 400px;
+  height: 400px;
   position: relative;
+}
+
+.map-container .leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
 }
 
 .players-list {

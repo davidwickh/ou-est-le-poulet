@@ -7,6 +7,12 @@ export interface Location {
   lng: number;
 }
 
+export interface EncryptedLocation {
+  encrypted: string;
+  iv: string;
+  salt: string;
+}
+
 export interface User {
   id: string;
   displayName: string;
@@ -28,12 +34,35 @@ export interface Player {
   joinedAt: number;
 }
 
+// Database version of Player with encrypted location
+export interface PlayerDB {
+  userId: string;
+  displayName: string;
+  encryptedLocation: EncryptedLocation | null;
+  lastUpdated: number;
+  foundChicken: boolean;
+  joinedAt: number;
+}
+
 export interface Game {
   id: string;
   gameCode: string;
   chickenId: string;
   chickenName: string;
   chickenLocation: Location | null;
+  status: GameStatus;
+  config: GameConfig;
+  startTime: number | null;
+  currentRadius: number;
+  createdAt: number;
+}
+
+// Database version of Game with encrypted chicken location
+export interface GameDB {
+  gameCode: string;
+  chickenId: string;
+  chickenName: string;
+  encryptedChickenLocation: EncryptedLocation | null;
   status: GameStatus;
   config: GameConfig;
   startTime: number | null;

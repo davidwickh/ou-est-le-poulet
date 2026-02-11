@@ -4,33 +4,29 @@ import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
 export const Login: React.FC = () => {
-    const [isSignUp, setIsSignUp] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [displayName, setDisplayName] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { signIn, signUp } = useAuth();
+    const { signInWithName } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        if (!displayName.trim()) {
+            setError('Please enter your name');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            if (isSignUp) {
-                if (!displayName.trim()) {
-                    throw new Error('Please enter your name');
-                }
-                await signUp(email, password, displayName);
-            } else {
-                await signIn(email, password);
-            }
+            await signInWithName(displayName.trim());
             navigate('/role');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Authentication failed');
+            setError(err instanceof Error ? err.message : 'Failed to join. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -43,63 +39,25 @@ export const Login: React.FC = () => {
                 <p className="login-subtitle">Location-based hide and seek game</p>
 
                 <form onSubmit={handleSubmit} className="login-form">
-                    {isSignUp && (
-                        <div className="form-group">
-                            <label htmlFor="displayName">Your Name</label>
-                            <input
-                                id="displayName"
-                                type="text"
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
-                                placeholder="Enter your name"
-                                required={isSignUp}
-                            />
-                        </div>
-                    )}
-
                     <div className="form-group">
-                        <label htmlFor="email">Email</label>
+                        <label htmlFor="displayName">What's your name?</label>
                         <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                            required
-                            minLength={6}
+                            id="displayName"
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            placeholder="Enter your name to play"
+                            autoFocus
+                            maxLength={20}
                         />
                     </div>
 
                     {error && <div className="error-message">{error}</div>}
 
                     <button type="submit" className="btn btn-primary" disabled={loading}>
-                        {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                        {loading ? 'Joining...' : "Let's Play!"}
                     </button>
                 </form>
-
-                <button
-                    onClick={() => {
-                        setIsSignUp(!isSignUp);
-                        setError('');
-                    }}
-                    className="btn btn-text"
-                >
-                    {isSignUp
-                        ? 'Already have an account? Sign In'
-                        : "Don't have an account? Sign Up"}
-                </button>
             </div>
         </div>
     );

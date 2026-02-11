@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Games collection
+    match /games/{gameId} {
+      // Anyone authenticated can read games (to join by code)
+      allow read: if request.auth != null;
+      
+      // Only authenticated users can create games
+      allow create: if request.auth != null
+        && request.resource.data.chickenId == request.auth.uid;
+      
+      // Only the chicken (game creator) can update game status and encrypted chicken location
+      allow update: if request.auth != null
+        && resource.data.chickenId == request.auth.uid
+        && request.resource.data.chickenId == resource.data.chickenId // Can't change chicken owner
+        && request.resource.data.gameCode == resource.data.gameCode; // Can't change game code
+      
+      // Only chicken can delete the game
+      allow delete: if request.auth != null
+        && resource.data.chickenId == request.auth.uid;
+      
+      // Players subcollection
+      match /players/{playerId} {
+        // Players in the game can read all player data
+        allow read: if request.auth != null;
+        
+        // Players can only create/update their own player document
+        allow create: if request.auth != null
+          && playerId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid;
+        
+        // Players can only update their own encrypted location and foundChicken status
+        allow update: if request.auth != null
+          && playerId == request.auth.uid
+          && request.resource.data.userId == resource.data.userId; // Can't change userId
+        
+        // Players can only delete their own player document (leave game)
+        allow delete: if request.auth != null
+          && playerId == request.auth.uid;
+      }
+    }
+  }
+}
