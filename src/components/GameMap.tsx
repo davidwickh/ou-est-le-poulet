@@ -33,6 +33,14 @@ const playerIcon = L.divIcon({
     iconAnchor: [12, 24],
 });
 
+// Current user location icon (blue dot)
+const myLocationIcon = L.divIcon({
+    className: 'custom-my-location-icon',
+    html: '<div style="width: 16px; height: 16px; background: #3b82f6; border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+});
+
 interface MapUpdaterProps {
     center: Location;
 }
@@ -55,6 +63,7 @@ interface GameMapProps {
     showChicken?: boolean;
     showPlayers?: boolean;
     showCircle?: boolean;
+    showMyLocation?: boolean;
 }
 
 export const GameMap: React.FC<GameMapProps> = ({
@@ -65,6 +74,7 @@ export const GameMap: React.FC<GameMapProps> = ({
     showChicken = false,
     showPlayers = false,
     showCircle = false,
+    showMyLocation = true,
 }) => {
     return (
         <MapContainer
@@ -122,6 +132,16 @@ export const GameMap: React.FC<GameMapProps> = ({
                     </Marker>
                 );
             })}
+
+            {/* Show my location marker */}
+            {showMyLocation && centerLocation && (
+                <Marker
+                    position={[centerLocation.lat, centerLocation.lng]}
+                    icon={myLocationIcon}
+                >
+                    <Popup>📍 You are here</Popup>
+                </Marker>
+            )}
         </MapContainer>
     );
 };

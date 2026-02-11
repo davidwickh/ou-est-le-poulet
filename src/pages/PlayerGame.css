@@ -1,1 +1,4 @@
-/* Player game specific styles - inherits from ChickenGame.css */
+/* Player game styles - import shared game styles */
+@import './ChickenGame.css';
+
+/* Player-specific overrides if needed */
