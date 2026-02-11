@@ -97,24 +97,23 @@ export const mergeGameConfig = (userConfig: Partial<GameConfig>): GameConfig => 
 
 /**
  * Generate a random circle offset so the chicken is inside the circle but not at the center.
- * The offset is a random direction and distance (30-70% of the radius).
+ * Each axis (lat/lng) is independently randomized between -radius and +radius.
  * Returns the offset in lat/lng degrees.
  */
 export const generateCircleOffset = (radiusMeters: number): Location => {
-  // Random angle in radians
-  const angle = Math.random() * 2 * Math.PI;
-  // Random distance between 30% and 70% of radius
-  const distance = radiusMeters * (0.3 + Math.random() * 0.4);
-  
   // Convert meters to approximate degrees
   // 1 degree latitude ~ 111,320 meters
   // 1 degree longitude varies by latitude, but we use a rough approximation
   const metersPerDegreeLat = 111320;
   const metersPerDegreeLng = 111320 * Math.cos(51.5 * Math.PI / 180); // Use London latitude as approximation
   
+  // Random offset for each axis independently: between -radius and +radius
+  const latOffsetMeters = (Math.random() * 2 - 1) * radiusMeters; // -radius to +radius
+  const lngOffsetMeters = (Math.random() * 2 - 1) * radiusMeters; // -radius to +radius
+  
   return {
-    lat: (distance * Math.cos(angle)) / metersPerDegreeLat,
-    lng: (distance * Math.sin(angle)) / metersPerDegreeLng,
+    lat: latOffsetMeters / metersPerDegreeLat,
+    lng: lngOffsetMeters / metersPerDegreeLng,
   };
 };
 
