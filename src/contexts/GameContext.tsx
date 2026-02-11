@@ -8,6 +8,7 @@ import {
     query,
     where,
     getDocs,
+    deleteField,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from './AuthContext';
@@ -23,7 +24,7 @@ import {
 import { generateGameCode, mergeGameConfig } from '../utils/gameHelpers';
 import { encryptLocation, decryptLocation } from '../utils/encryption';
 
-interface GameContextType {
+export interface GameContextType {
     currentGame: Game | null;
     players: Map<string, Player>;
     loading: boolean;
@@ -37,7 +38,8 @@ interface GameContextType {
     leaveGame: () => Promise<void>;
 }
 
-const GameContext = createContext<GameContextType | undefined>(undefined);
+// Export context so mock providers can use the same context
+export const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const useGame = () => {
     const context = useContext(GameContext);
@@ -296,6 +298,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const gameRef = doc(db, 'games', currentGame.id);
         await updateDoc(gameRef, {
             encryptedChickenLocation,
+            // Remove any old unencrypted chickenLocation field
+            chickenLocation: deleteField(),
         });
     };
 
@@ -314,6 +318,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await updateDoc(playerRef, {
             encryptedLocation,
             lastUpdated: Date.now(),
+            // Remove any old unencrypted location field
+            location: deleteField(),
         });
     };
 

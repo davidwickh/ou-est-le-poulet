@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '../contexts/GameContext';
+import { useAppGame } from '../hooks/useAppContext';
 import './JoinGame.css';
 
 export const JoinGame: React.FC = () => {
     const navigate = useNavigate();
-    const { joinGame, loading, error } = useGame();
+    const { joinGame, loading, error } = useAppGame();
     const [gameCode, setGameCode] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {

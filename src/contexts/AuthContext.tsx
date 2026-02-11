@@ -8,14 +8,18 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
-interface AuthContextType {
-    currentUser: User | null;
+// User type with required uid and displayName for game functionality
+export type AppUser = (User | (Partial<User> & { uid: string; displayName: string }));
+
+export interface AuthContextType {
+    currentUser: AppUser | null;
     loading: boolean;
     signInWithName: (displayName: string) => Promise<void>;
     signOut: () => Promise<void>;
 }
 
-const AuthContext: React.Context<AuthContextType | undefined> = createContext<AuthContextType | undefined>(undefined);
+// Export context so mock providers can use the same context
+export const AuthContext: React.Context<AuthContextType | undefined> = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
     const context = useContext(AuthContext);

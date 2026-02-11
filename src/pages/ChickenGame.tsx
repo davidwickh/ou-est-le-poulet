@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGame } from '../contexts/GameContext';
+import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
 import { calculateCurrentRadius, formatTime } from '../utils/gameHelpers';
@@ -9,7 +9,7 @@ import './ChickenGame.css';
 export const ChickenGame: React.FC = () => {
     const { gameId } = useParams<{ gameId: string }>();
     const navigate = useNavigate();
-    const { currentGame, players, startGame, updateChickenLocation, leaveGame } = useGame();
+    const { currentGame, players, startGame, updateChickenLocation, leaveGame } = useAppGame();
     const { location, error: locationError } = useGeolocation(true);
     const [currentRadius, setCurrentRadius] = useState(0);
     const [elapsedTime, setElapsedTime] = useState(0);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useGame } from '../contexts/GameContext';
+import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
 import { calculateCurrentRadius, formatTime, getTimeUntilNextShrink } from '../utils/gameHelpers';
@@ -15,7 +15,7 @@ export const PlayerGame: React.FC = () => {
         updatePlayerLocation,
         markPlayerFoundChicken,
         leaveGame,
-    } = useGame();
+    } = useAppGame();
     const { location, error: locationError } = useGeolocation(true);
     const [currentRadius, setCurrentRadius] = useState(0);
     const [elapsedTime, setElapsedTime] = useState(0);

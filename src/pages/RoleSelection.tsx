@@ -1,11 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAppAuth } from '../hooks/useAppContext';
 import './RoleSelection.css';
 
 export const RoleSelection: React.FC = () => {
     const navigate = useNavigate();
-    const { currentUser, signOut } = useAuth();
+    const { currentUser, signOut } = useAppAuth();
 
     return (
         <div className="role-container">

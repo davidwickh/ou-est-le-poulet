@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGame } from '../contexts/GameContext';
+import { useAppGame } from '../hooks/useAppContext';
 import { GameConfig, DEFAULT_GAME_CONFIG } from '../types';
 import './CreateGame.css';
 
 export const CreateGame: React.FC = () => {
     const navigate = useNavigate();
-    const { createGame, loading, error } = useGame();
+    const { createGame, loading, error } = useAppGame();
 
     const [config, setConfig] = useState<Partial<GameConfig>>({
         initialRadiusMeters: DEFAULT_GAME_CONFIG.initialRadiusMeters,

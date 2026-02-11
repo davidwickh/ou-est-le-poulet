@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAppAuth } from '../hooks/useAppContext';
 import './Login.css';
 
 export const Login: React.FC = () => {
@@ -8,7 +8,7 @@ export const Login: React.FC = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const { signInWithName } = useAuth();
+    const { signInWithName } = useAppAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
