@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Game, GameConfig, Player, Location } from '../types';
-import { generateGameCode, mergeGameConfig, calculateCurrentRadius } from '../utils/gameHelpers';
+import { generateGameCode, mergeGameConfig, calculateCurrentRadius, generateCircleOffset } from '../utils/gameHelpers';
 import { GameContext, GameContextType } from './GameContext';
 
 /**
@@ -80,6 +80,7 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             chickenId: 'mock-chicken-user',
             chickenName: 'Mock Chicken',
             chickenLocation: DEFAULT_LOCATION,
+            circleOffset: generateCircleOffset(gameConfig.initialRadiusMeters),
             status: 'waiting',
             config: gameConfig,
             startTime: null,
@@ -112,6 +113,7 @@ export const MockGameProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             chickenId: 'mock-chicken-user',
             chickenName: 'Mock Chicken',
             chickenLocation: DEFAULT_LOCATION,
+            circleOffset: generateCircleOffset(gameConfig.initialRadiusMeters),
             status: 'waiting',
             config: gameConfig,
             startTime: null,

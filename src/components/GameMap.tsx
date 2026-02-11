@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Location, Player } from '../types';
-import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in React-Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -52,12 +51,24 @@ const MapUpdater: React.FC<MapUpdaterProps> = ({ center }) => {
         map.setView([center.lat, center.lng], map.getZoom());
     }, [center.lat, center.lng, map]);
 
+    // Fix for map not rendering correctly - invalidate size multiple times after mount
+    useEffect(() => {
+        // Multiple invalidation attempts to handle various timing issues
+        const timeouts = [100, 250, 500, 1000].map(delay =>
+            setTimeout(() => {
+                map.invalidateSize();
+            }, delay)
+        );
+        return () => timeouts.forEach(clearTimeout);
+    }, [map]);
+
     return null;
 };
 
 interface GameMapProps {
     centerLocation: Location;
     chickenLocation?: Location | null;
+    circleCenter?: Location | null; // Separate center for the search circle (offset from chicken)
     playerLocations?: Map<string, Player>;
     circleRadius?: number;
     showChicken?: boolean;
@@ -69,6 +80,7 @@ interface GameMapProps {
 export const GameMap: React.FC<GameMapProps> = ({
     centerLocation,
     chickenLocation,
+    circleCenter,
     playerLocations,
     circleRadius,
     showChicken = false,
@@ -80,7 +92,7 @@ export const GameMap: React.FC<GameMapProps> = ({
         <MapContainer
             center={[centerLocation.lat, centerLocation.lng]}
             zoom={15}
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: '400px', width: '100%', minHeight: '400px' }}
             scrollWheelZoom={true}
         >
             <TileLayer
@@ -90,10 +102,10 @@ export const GameMap: React.FC<GameMapProps> = ({
 
             <MapUpdater center={centerLocation} />
 
-            {/* Show circle around chicken */}
-            {showCircle && chickenLocation && circleRadius !== undefined && (
+            {/* Show circle around the offset center (not chicken's actual location) */}
+            {showCircle && circleCenter && circleRadius !== undefined && (
                 <Circle
-                    center={[chickenLocation.lat, chickenLocation.lng]}
+                    center={[circleCenter.lat, circleCenter.lng]}
                     radius={circleRadius}
                     pathOptions={{
                         color: '#ff6b6b',

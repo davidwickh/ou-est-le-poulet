@@ -21,7 +21,7 @@ import {
     GameDB,
     PlayerDB,
 } from '../types';
-import { generateGameCode, mergeGameConfig } from '../utils/gameHelpers';
+import { generateGameCode, mergeGameConfig, generateCircleOffset } from '../utils/gameHelpers';
 import { encryptLocation, decryptLocation } from '../utils/encryption';
 
 export interface GameContextType {
@@ -109,6 +109,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     chickenId: data.chickenId,
                     chickenName: data.chickenName,
                     chickenLocation,
+                    circleOffset: data.circleOffset,
                     status: data.status,
                     config: data.config,
                     startTime: data.startTime,
@@ -164,6 +165,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 chickenId: currentUser.uid,
                 chickenName: currentUser.displayName || 'Anonymous Chicken',
                 encryptedChickenLocation: null,
+                circleOffset: generateCircleOffset(gameConfig.initialRadiusMeters),
                 status: 'waiting',
                 config: gameConfig,
                 startTime: null,
@@ -182,6 +184,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 chickenId: currentUser.uid,
                 chickenName: currentUser.displayName || 'Anonymous Chicken',
                 chickenLocation: null,
+                circleOffset: newGameDB.circleOffset,
                 status: 'waiting',
                 config: gameConfig,
                 startTime: null,
@@ -249,6 +252,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 chickenId: gameData.chickenId,
                 chickenName: gameData.chickenName,
                 chickenLocation,
+                circleOffset: gameData.circleOffset,
                 status: gameData.status,
                 config: gameData.config,
                 startTime: gameData.startTime,

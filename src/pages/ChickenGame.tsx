@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { GameMap } from '../components/GameMap';
-import { calculateCurrentRadius, formatTime } from '../utils/gameHelpers';
+import { calculateCurrentRadius, formatTime, getCircleCenter } from '../utils/gameHelpers';
 import './ChickenGame.css';
 
 export const ChickenGame: React.FC = () => {
@@ -130,6 +130,11 @@ export const ChickenGame: React.FC = () => {
                 <GameMap
                     centerLocation={location}
                     chickenLocation={location}
+                    circleCenter={
+                        currentGame.circleOffset
+                            ? getCircleCenter(location, currentGame.circleOffset)
+                            : location
+                    }
                     playerLocations={players}
                     circleRadius={currentRadius}
                     showChicken={true}

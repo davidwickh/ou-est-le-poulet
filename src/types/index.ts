@@ -50,6 +50,7 @@ export interface Game {
   chickenId: string;
   chickenName: string;
   chickenLocation: Location | null;
+  circleOffset: Location; // Offset from chicken location to circle center
   status: GameStatus;
   config: GameConfig;
   startTime: number | null;
@@ -63,6 +64,7 @@ export interface GameDB {
   chickenId: string;
   chickenName: string;
   encryptedChickenLocation: EncryptedLocation | null;
+  circleOffset: Location; // Offset from chicken location to circle center
   status: GameStatus;
   config: GameConfig;
   startTime: number | null;

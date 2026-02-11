@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Location } from '../types';
+import { isMockMode } from '../utils/mockMode';
 
 interface GeolocationState {
   location: Location | null;
@@ -7,6 +8,12 @@ interface GeolocationState {
   loading: boolean;
   permissionGranted: boolean;
 }
+
+// Default mock location (London) - used when in mock mode
+const MOCK_LOCATION: Location = {
+  lat: 51.5074,
+  lng: -0.1278,
+};
 
 export const useGeolocation = (watch: boolean = true) => {
   const [state, setState] = useState<GeolocationState>({
@@ -17,6 +24,17 @@ export const useGeolocation = (watch: boolean = true) => {
   });
 
   useEffect(() => {
+    // In mock mode, return a predefined location instead of using browser geolocation
+    if (isMockMode()) {
+      setState({
+        location: MOCK_LOCATION,
+        error: null,
+        loading: false,
+        permissionGranted: true,
+      });
+      return;
+    }
+
     if (!navigator.geolocation) {
       setState({
         location: null,
