@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -23,6 +23,12 @@ export const PlayerGame: React.FC = () => {
     const [timeToShrink, setTimeToShrink] = useState(0);
     const [hasMarkedFound, setHasMarkedFound] = useState(false);
     const [venues, setVenues] = useState<Venue[]>([]);
+    const gameRef = useRef(currentGame);
+
+    // Keep ref updated with latest game data
+    useEffect(() => {
+        gameRef.current = currentGame;
+    }, [currentGame]);
 
     // Update player location
     useEffect(() => {
@@ -31,22 +37,25 @@ export const PlayerGame: React.FC = () => {
         }
     }, [location, currentGame?.id]);
 
-    // Update radius and timers every second
+    // Update radius and timers every second - uses ref to avoid resetting interval
     useEffect(() => {
-        if (!currentGame) return;
+        if (!currentGame?.id) return;
 
         const interval = setInterval(() => {
-            const radius = calculateCurrentRadius(currentGame);
+            const game = gameRef.current;
+            if (!game) return;
+
+            const radius = calculateCurrentRadius(game);
             setCurrentRadius(radius);
 
-            if (currentGame.startTime && currentGame.status === 'active') {
-                setElapsedTime(Date.now() - currentGame.startTime);
-                setTimeToShrink(getTimeUntilNextShrink(currentGame));
+            if (game.startTime && game.status === 'active') {
+                setElapsedTime(Date.now() - game.startTime);
+                setTimeToShrink(getTimeUntilNextShrink(game));
             }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [currentGame]);
+    }, [currentGame?.id]);
 
     // Fetch venues when we have circle center
     useEffect(() => {

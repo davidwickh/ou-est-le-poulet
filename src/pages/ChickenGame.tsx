@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppGame } from '../hooks/useAppContext';
 import { useGeolocation } from '../hooks/useGeolocation';
@@ -18,32 +18,41 @@ export const ChickenGame: React.FC = () => {
     const [venues, setVenues] = useState<Venue[]>([]);
     const [purchaseAmount, setPurchaseAmount] = useState('');
     const [purchaseDescription, setPurchaseDescription] = useState('');
+    const [showPurchasePanel, setShowPurchasePanel] = useState(false);
+    const [showPlayersPanel, setShowPlayersPanel] = useState(false);
+    const gameRef = useRef(currentGame);
 
-    // Update chicken location
+    // Keep ref updated with latest game data
+    useEffect(() => {
+        gameRef.current = currentGame;
+    }, [currentGame]);
+
     useEffect(() => {
         if (location && currentGame) {
             updateChickenLocation(location);
         }
     }, [location, currentGame?.id]);
 
-    // Update current radius every second
+    // Timer effect - uses ref to avoid resetting interval
     useEffect(() => {
-        if (!currentGame) return;
+        if (!currentGame?.id) return;
 
         const interval = setInterval(() => {
-            const radius = calculateCurrentRadius(currentGame);
+            const game = gameRef.current;
+            if (!game) return;
+
+            const radius = calculateCurrentRadius(game);
             setCurrentRadius(radius);
 
-            if (currentGame.startTime) {
-                setElapsedTime(Date.now() - currentGame.startTime);
-                setTimeToShrink(getTimeUntilNextShrink(currentGame));
+            if (game.startTime) {
+                setElapsedTime(Date.now() - game.startTime);
+                setTimeToShrink(getTimeUntilNextShrink(game));
             }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [currentGame]);
+    }, [currentGame?.id]);
 
-    // Fetch venues when we have location and circle offset
     useEffect(() => {
         if (!location || !currentGame?.circleOffset) return;
 
@@ -75,6 +84,7 @@ export const ChickenGame: React.FC = () => {
             await addPurchase(amount, purchaseDescription || 'Drink');
             setPurchaseAmount('');
             setPurchaseDescription('');
+            setShowPurchasePanel(false);
         } catch (err) {
             alert('Failed to add purchase');
         }
@@ -104,71 +114,11 @@ export const ChickenGame: React.FC = () => {
     const playersFoundChicken = Array.from(players.values()).filter(p => p.foundChicken).length;
     const totalSpent = currentGame.purchases.reduce((sum, p) => sum + p.amount, 0);
     const remainingPot = currentGame.potAmount - totalSpent;
+    const potPercentage = currentGame.potAmount > 0 ? (remainingPot / currentGame.potAmount) * 100 : 0;
 
     return (
-        <div className="chicken-game-container">
-            <div className="game-header">
-                <div className="game-info">
-                    <h1>🐔 Chicken View</h1>
-                    <div className="game-code">
-                        Game Code: <span className="code-display">{currentGame.gameCode}</span>
-                    </div>
-                </div>
-
-                <button onClick={handleLeaveGame} className="btn btn-small">
-                    Leave Game
-                </button>
-            </div>
-
-            <div className="game-stats">
-                <div className="stat">
-                    <span className="stat-label">Players:</span>
-                    <span className="stat-value">{playerCount}</span>
-                </div>
-                <div className="stat">
-                    <span className="stat-label">Found Chicken:</span>
-                    <span className="stat-value">{playersFoundChicken}</span>
-                </div>
-                <div className="stat">
-                    <span className="stat-label">Search Radius:</span>
-                    <span className="stat-value">{Math.round(currentRadius)}m</span>
-                </div>
-                {currentGame.status === 'active' && (
-                    <>
-                        <div className="stat">
-                            <span className="stat-label">Time Elapsed:</span>
-                            <span className="stat-value">{formatTime(elapsedTime)}</span>
-                        </div>
-                        <div className="stat">
-                            <span className="stat-label">Next Shrink:</span>
-                            <span className="stat-value">{formatTime(timeToShrink)}</span>
-                        </div>
-                    </>
-                )}
-                <div className="stat pot-stat">
-                    <span className="stat-label">💰 Pot Remaining:</span>
-                    <span className="stat-value">£{remainingPot.toFixed(2)}</span>
-                </div>
-            </div>
-
-            {currentGame.status === 'waiting' && (
-                <div className="waiting-area">
-                    <p className="waiting-message">
-                        Waiting for players to join... Share the game code with your friends!
-                    </p>
-                    <button
-                        onClick={handleStartGame}
-                        className="btn btn-primary btn-large"
-                        disabled={playerCount === 0 || !location}
-                    >
-                        {playerCount === 0
-                            ? 'Waiting for players...'
-                            : 'Start Game'}
-                    </button>
-                </div>
-            )}
-
-            <div className="map-container">
+        <div className="game-fullscreen">
+            <div className="map-fullscreen">
                 <GameMap
                     centerLocation={location}
                     chickenLocation={location}
@@ -187,55 +137,174 @@ export const ChickenGame: React.FC = () => {
                 />
             </div>
 
-            {currentGame.status === 'active' && (
-                <div className="purchase-section">
-                    <h3>🍺 Log a Drink Purchase</h3>
-                    <form onSubmit={handleAddPurchase} className="purchase-form">
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="Amount (£)"
-                            value={purchaseAmount}
-                            onChange={(e) => setPurchaseAmount(e.target.value)}
-                            required
-                        />
-                        <input
-                            type="text"
-                            placeholder="Description (optional)"
-                            value={purchaseDescription}
-                            onChange={(e) => setPurchaseDescription(e.target.value)}
-                        />
-                        <button type="submit" className="btn btn-primary">
-                            Add Purchase
-                        </button>
-                    </form>
-                    {currentGame.purchases.length > 0 && (
-                        <div className="purchases-list">
-                            <h4>Recent Purchases:</h4>
-                            <ul>
-                                {currentGame.purchases.slice(-5).reverse().map((purchase) => (
-                                    <li key={purchase.id}>
-                                        £{purchase.amount.toFixed(2)} - {purchase.description}
-                                    </li>
-                                ))}
-                            </ul>
+            <div className="top-bar">
+                <div className="top-bar-left">
+                    <span className="game-title">🐔 Chicken</span>
+                    <span className="game-code-badge">{currentGame.gameCode}</span>
+                </div>
+                <button onClick={handleLeaveGame} className="btn-icon" title="Leave Game">
+                    ✕
+                </button>
+            </div>
+
+            <div className="floating-cards">
+                <div className="cards-row">
+                    <div className="info-card status-card">
+                        <div className="card-row">
+                            <div className="stat-mini">
+                                <span className="stat-icon">👥</span>
+                                <div className="stat-content">
+                                    <span className="stat-num">{playerCount}</span>
+                                    <span className="stat-text">Players</span>
+                                </div>
+                            </div>
+                            <div className="stat-mini">
+                                <span className="stat-icon">✓</span>
+                                <div className="stat-content">
+                                    <span className="stat-num">{playersFoundChicken}</span>
+                                    <span className="stat-text">Found</span>
+                                </div>
+                            </div>
+                            <div className="stat-mini">
+                                <span className="stat-icon">📍</span>
+                                <div className="stat-content">
+                                    <span className="stat-num">{Math.round(currentRadius)}m</span>
+                                    <span className="stat-text">Radius</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {currentGame.status === 'active' && (
+                        <div className="info-card timer-card">
+                            <div className="timer-display">
+                                <div className="timer-main">
+                                    <span className="timer-label">Elapsed</span>
+                                    <span className="timer-value">{formatTime(elapsedTime)}</span>
+                                </div>
+                                <div className="timer-divider"></div>
+                                <div className="timer-shrink">
+                                    <span className="timer-label">Next Shrink</span>
+                                    <span className="timer-value shrink">{formatTime(timeToShrink)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="info-card pot-card" onClick={() => currentGame.status === 'active' && setShowPurchasePanel(!showPurchasePanel)}>
+                        <div className="pot-header">
+                            <span className="pot-icon">💰</span>
+                            <span className="pot-amount">£{remainingPot.toFixed(2)}</span>
+                            <span className="pot-total">/ £{currentGame.potAmount.toFixed(2)}</span>
+                        </div>
+                        <div className="pot-slider-container">
+                            <div
+                                className="pot-slider-fill"
+                                style={{
+                                    width: `${potPercentage}%`,
+                                    backgroundColor: potPercentage > 50 ? '#2ecc71' : potPercentage > 25 ? '#f39c12' : '#e74c3c'
+                                }}
+                            ></div>
+                        </div>
+                        {currentGame.status === 'active' && (
+                            <span className="pot-tap-hint">Tap to log purchase</span>
+                        )}
+                    </div>
+
+                    {playerCount > 0 && (
+                        <div className="players-card-wrapper">
+                            <div
+                                className={`info-card players-card ${showPlayersPanel ? 'expanded' : ''}`}
+                                onClick={() => setShowPlayersPanel(!showPlayersPanel)}
+                            >
+                                <div className="players-header">
+                                    <span>Players ({playerCount})</span>
+                                    <span className="expand-icon">{showPlayersPanel ? '▼' : '▶'}</span>
+                                </div>
+                            </div>
+                            {showPlayersPanel && (
+                                <ul className="players-dropdown">
+                                    {Array.from(players.values()).map((player) => (
+                                        <li key={player.userId} className={player.foundChicken ? 'found' : ''}>
+                                            <span>{player.displayName}</span>
+                                            {player.foundChicken && <span className="found-badge">✓</span>}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     )}
                 </div>
+            </div>
+
+            {currentGame.status === 'waiting' && (
+                <div className="waiting-overlay">
+                    <div className="waiting-card">
+                        <h2>Waiting for Players</h2>
+                        <p>Share code: <strong>{currentGame.gameCode}</strong></p>
+                        <div className="player-count-big">{playerCount} joined</div>
+                        <button
+                            onClick={handleStartGame}
+                            className="btn btn-primary btn-large"
+                            disabled={playerCount === 0 || !location}
+                        >
+                            {playerCount === 0 ? 'Waiting for players...' : '🎮 Start Game'}
+                        </button>
+                    </div>
+                </div>
             )}
 
-            {playerCount > 0 && (
-                <div className="players-list">
-                    <h3>Players ({playerCount})</h3>
-                    <ul>
-                        {Array.from(players.values()).map((player) => (
-                            <li key={player.userId} className={player.foundChicken ? 'found' : ''}>
-                                <span>{player.displayName}</span>
-                                {player.foundChicken && <span className="badge">✓ Found</span>}
-                            </li>
-                        ))}
-                    </ul>
+            {showPurchasePanel && currentGame.status === 'active' && (
+                <div className="panel-overlay" onClick={() => setShowPurchasePanel(false)}>
+                    <div className="purchase-panel" onClick={(e) => e.stopPropagation()}>
+                        <div className="panel-header">
+                            <h3>🍺 Log Purchase</h3>
+                            <button className="btn-icon" onClick={() => setShowPurchasePanel(false)}>✕</button>
+                        </div>
+                        <form onSubmit={handleAddPurchase} className="purchase-form-modern">
+                            <div className="input-group">
+                                <label>Amount</label>
+                                <div className="input-with-prefix">
+                                    <span className="prefix">£</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="0.00"
+                                        value={purchaseAmount}
+                                        onChange={(e) => setPurchaseAmount(e.target.value)}
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                            <div className="input-group">
+                                <label>Description</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Pint of vodmon"
+                                    value={purchaseDescription}
+                                    onChange={(e) => setPurchaseDescription(e.target.value)}
+                                />
+                            </div>
+                            <button type="submit" className="btn btn-primary btn-full">
+                                Add Purchase
+                            </button>
+                        </form>
+                        {currentGame.purchases.length > 0 && (
+                            <div className="recent-purchases">
+                                <h4>Recent</h4>
+                                <ul>
+                                    {currentGame.purchases.slice(-3).reverse().map((purchase) => (
+                                        <li key={purchase.id}>
+                                            <span>£{purchase.amount.toFixed(2)}</span>
+                                            <span className="desc">{purchase.description}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

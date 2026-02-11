@@ -113,7 +113,7 @@ export const GameMap: React.FC<GameMapProps> = ({
         <MapContainer
             center={[centerLocation.lat, centerLocation.lng]}
             zoom={15}
-            style={{ height: '400px', width: '100%', minHeight: '400px' }}
+            style={{ height: '100%', width: '100%' }}
             scrollWheelZoom={true}
         >
             <TileLayer

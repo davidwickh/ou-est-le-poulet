@@ -366,7 +366,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const gameRef = doc(db, 'games', currentGame.id);
         const updatedPurchases = [...currentGame.purchases, newPurchase];
-        
+
         await updateDoc(gameRef, {
             purchases: updatedPurchases,
         });
