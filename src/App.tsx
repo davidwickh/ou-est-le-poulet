@@ -15,7 +15,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return currentUser ? <>{children}</> : <Navigate to="/" />;
 };
 
-function AppRoutes() {
+const AppRoutes: React.FC = () => {
     return (
         <Routes>
             <Route path="/" element={<Login />} />
@@ -62,9 +62,9 @@ function AppRoutes() {
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     );
-}
+};
 
-function App() {
+const App: React.FC = () => {
     return (
         <BrowserRouter>
             <AuthProvider>
@@ -74,6 +74,6 @@ function App() {
             </AuthProvider>
         </BrowserRouter>
     );
-}
+};
 
 export default App;

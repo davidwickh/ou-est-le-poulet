@@ -14,9 +14,9 @@ export interface User {
 }
 
 export interface GameConfig {
-  initialRadius: number; // meters
-  shrinkInterval: number; // milliseconds
-  shrinkMeters: number; // meters to shrink each interval
+  initialRadiusMeters: number;
+  shrinkIntervalMilliSeconds: number;
+  shrinkMeters: number;
 }
 
 export interface Player {
@@ -46,7 +46,7 @@ export interface GameWithPlayers extends Game {
 }
 
 export const DEFAULT_GAME_CONFIG: GameConfig = {
-  initialRadius: 500, // 500 meters
-  shrinkInterval: 5 * 60 * 1000, // 5 minutes
+  initialRadiusMeters: 500, // 500 meters
+  shrinkIntervalMilliSeconds: 5 * 60 * 1000, // 5 minutes
   shrinkMeters: 50, // 50 meters
 };

@@ -157,7 +157,7 @@ export const PlayerGame: React.FC = () => {
             <div className="game-hint">
                 <p>
                     🎯 The chicken is somewhere within the red circle.
-                    The circle shrinks every {currentGame.config.shrinkInterval / 60000} minutes!
+                    The circle shrinks every {currentGame.config.shrinkIntervalMilliSeconds / 60000} minutes!
                 </p>
             </div>
         </div>

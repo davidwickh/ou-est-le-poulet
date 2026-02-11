@@ -14,13 +14,13 @@ export const calculateCurrentRadius = (
   game: Game
 ): number => {
   if (!game.startTime || game.status !== 'active') {
-    return game.config.initialRadius;
+    return game.config.initialRadiusMeters;
   }
 
   const elapsed = Date.now() - game.startTime;
-  const intervals = Math.floor(elapsed / game.config.shrinkInterval);
+  const intervals = Math.floor(elapsed / game.config.shrinkIntervalMilliSeconds);
   const shrinkAmount = intervals * game.config.shrinkMeters;
-  const currentRadius = Math.max(0, game.config.initialRadius - shrinkAmount);
+  const currentRadius = Math.max(0, game.config.initialRadiusMeters - shrinkAmount);
 
   return currentRadius;
 };
@@ -65,18 +65,18 @@ export const getTimeUntilNextShrink = (game: Game): number => {
   }
 
   const elapsed = Date.now() - game.startTime;
-  const timeSinceLastShrink = elapsed % game.config.shrinkInterval;
-  return game.config.shrinkInterval - timeSinceLastShrink;
+  const timeSinceLastShrink = elapsed % game.config.shrinkIntervalMilliSeconds;
+  return game.config.shrinkIntervalMilliSeconds - timeSinceLastShrink;
 };
 
 /**
  * Validate game configuration
  */
 export const validateGameConfig = (config: Partial<GameConfig>): boolean => {
-  if (config.initialRadius && (config.initialRadius < 50 || config.initialRadius > 5000)) {
+  if (config.initialRadiusMeters && (config.initialRadiusMeters < 50 || config.initialRadiusMeters > 5000)) {
     return false;
   }
-  if (config.shrinkInterval && (config.shrinkInterval < 30000 || config.shrinkInterval > 3600000)) {
+  if (config.shrinkIntervalMilliSeconds && (config.shrinkIntervalMilliSeconds < 30000 || config.shrinkIntervalMilliSeconds > 3600000)) {
     return false;
   }
   if (config.shrinkMeters && (config.shrinkMeters < 10 || config.shrinkMeters > 500)) {

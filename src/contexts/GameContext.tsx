@@ -43,6 +43,11 @@ export const useGame = () => {
     return context;
 };
 
+/**
+ * A provider component that manages the game state and interactions with Firestore database.
+ * @param children - The child components that will have access to the game context. 
+ * @returns A context provider that wraps the application and provides game-related state and functions.
+ */
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { currentUser } = useAuth();
     const [currentGame, setCurrentGame] = useState<Game | null>(null);
@@ -108,7 +113,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 status: 'waiting',
                 config: gameConfig,
                 startTime: null,
-                currentRadius: gameConfig.initialRadius,
+                currentRadius: gameConfig.initialRadiusMeters,
                 createdAt: Date.now(),
             };
 

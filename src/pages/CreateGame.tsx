@@ -9,8 +9,8 @@ export const CreateGame: React.FC = () => {
     const { createGame, loading, error } = useGame();
 
     const [config, setConfig] = useState<Partial<GameConfig>>({
-        initialRadius: DEFAULT_GAME_CONFIG.initialRadius,
-        shrinkInterval: DEFAULT_GAME_CONFIG.shrinkInterval / 60000, // Convert to minutes for UI
+        initialRadiusMeters: DEFAULT_GAME_CONFIG.initialRadiusMeters,
+        shrinkIntervalMilliSeconds: DEFAULT_GAME_CONFIG.shrinkIntervalMilliSeconds / 60000, // Convert to minutes for UI
         shrinkMeters: DEFAULT_GAME_CONFIG.shrinkMeters,
     });
 
@@ -21,7 +21,7 @@ export const CreateGame: React.FC = () => {
             // Convert minutes back to milliseconds
             const gameConfig: Partial<GameConfig> = {
                 ...config,
-                shrinkInterval: (config.shrinkInterval || 5) * 60000,
+                shrinkIntervalMilliSeconds: (config.shrinkIntervalMilliSeconds || 5) * 60000,
             };
 
             const gameId = await createGame(gameConfig);
@@ -49,9 +49,9 @@ export const CreateGame: React.FC = () => {
                             min="50"
                             max="5000"
                             step="50"
-                            value={config.initialRadius}
+                            value={config.initialRadiusMeters}
                             onChange={(e) =>
-                                setConfig({ ...config, initialRadius: Number(e.target.value) })
+                                setConfig({ ...config, initialRadiusMeters: Number(e.target.value) })
                             }
                             required
                         />
@@ -68,9 +68,9 @@ export const CreateGame: React.FC = () => {
                             min="1"
                             max="60"
                             step="1"
-                            value={config.shrinkInterval}
+                            value={config.shrinkIntervalMilliSeconds}
                             onChange={(e) =>
-                                setConfig({ ...config, shrinkInterval: Number(e.target.value) })
+                                setConfig({ ...config, shrinkIntervalMilliSeconds: Number(e.target.value) })
                             }
                             required
                         />

@@ -17,7 +17,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext: React.Context<AuthContextType | undefined> = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -27,6 +27,12 @@ export const useAuth = () => {
     return context;
 };
 
+/**
+ * A provider component that manages user authentication state and provides functions for signing up, signing in, and signing out.
+ * It listens for authentication state changes and updates the current user accordingly.
+ * @param children - The child components that will have access to the authentication context. 
+ * @returns A context provider that wraps the application and provides authentication-related state and functions.
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
